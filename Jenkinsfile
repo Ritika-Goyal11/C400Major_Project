@@ -1,47 +1,44 @@
 pipeline {
     agent any
+
     stages {
         stage('Checkout SCM') {
             steps {
                 checkout scm
             }
         }
+
         stage('Run Stress Test Script') {
             steps {
                 script {
-                    while (true) {
-                        def userChoice = input(
-                            id: 'userInput', 
-                            message: 'Select an option for stress testing:',
+                    def choice = -1
+                    while (choice != 6) {
+                        def process = sh(script: "python3 main.py", returnStdout: true, returnStatus: true)
+                        echo process.stdout
+                        if (process.returnStatus != 0) {
+                            error("Script execution failed with exit code: ${process.returnStatus}")
+                        }
+                        choice = input(
+                            id: 'userInput', message: 'Select an option for stress testing:',
                             parameters: [
-                                choice(name: 'Stress Test Choice', choices: [
-                                    '1. Memory Stress Testing',
-                                    '2. Disk Stress Testing',
-                                    '3. Network Stress Testing',
-                                    '4. CPU Stress Testing',
-                                    '5. MySQL Stress Testing',
-                                    '6. Exit'], 
-                                    description: 'Select your stress testing option')
+                                choice(
+                                    name: 'Choice',
+                                    choices: ['1', '2', '3', '4', '5', '6'],
+                                    description: 'Choose an option: 1. Memory, 2. Disk, 3. Network, 4. CPU, 5. MySQL, 6. Exit'
+                                )
                             ]
                         )
-                        
-                        int choice = Integer.parseInt(userChoice.split('\\.')[0].trim())
-
-                        if (choice == 6) {
-                            echo 'Exiting stress test selection.'
-                            break
-                        }
-                        
-                        sh "echo ${choice} > input.txt"
-                        sh 'python3 main.py < input.txt'
                     }
                 }
             }
         }
     }
+
     post {
         always {
-            sh 'rm -f input.txt'
+            // Clean up
+            echo "Cleaning up..."
+            sh 'rm -f input.txt' 
         }
     }
 }
