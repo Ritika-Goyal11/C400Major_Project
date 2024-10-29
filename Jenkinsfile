@@ -1,22 +1,22 @@
 pipeline {
     agent any
 
-    parameters {
-        choice(name: 'STRESS_TEST_CHOICE', choices: ['1', '2', '3', '4', '5', '6'], description: 'Select the type of stress test to run:')
+    environment {
+        TARGET_VM = '192.168.1.119' 
+        TARGET_USER = 'root'          
+        TARGET_DIRECTORY = '/root' 
+        GIT_REPO = 'https://github.com/Ritika-Goyal11/C400Major_Project.git'
     }
 
     stages {
-        stage('Clone Repository') {
-            steps {
-                git url: 'https://github.com/Ritika-Goyal11/C400Major_Project.git', branch: 'main'
-            }
-        }
-        stage('Run Stress Test Script') {
+        stage('Git Pull on Target VM') {
             steps {
                 script {
-                    // Pass the user selection as input to the main.py script
                     sh """
-                    echo "${STRESS_TEST_CHOICE}" | python3 main.py
+                    ssh -o StrictHostKeyChecking=no ${TARGET_USER}@${TARGET_VM} << EOF
+                        cd ${TARGET_DIRECTORY}
+                        git pull ${GIT_REPO} main
+                    EOF
                     """
                 }
             }
@@ -25,10 +25,10 @@ pipeline {
 
     post {
         success {
-            echo 'Stress test executed successfully!'
+            echo 'Script downloaded successfully on target VM!'
         }
         failure {
-            echo 'Stress test execution failed.'
+            echo 'Script download failed on target VM.'
         }
     }
 }
