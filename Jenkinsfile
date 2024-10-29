@@ -1,5 +1,8 @@
 pipeline {
     agent any
+    parameters {
+        choice(name: 'STRESS_TEST', choices: ['Memory', 'Disk', 'Network', 'CPU', 'MySQL'], description: 'Select the stress test to run')
+    }
 
     stages {
         stage('Checkout SCM') {
@@ -8,20 +11,12 @@ pipeline {
             }
         }
 
-        stage('Select Stress Test') {
-            steps {
-                script {
-                    // Call main directly, which will handle user input
-                    def response = sh(script: 'python3 main.py', returnStdout: true).trim()
-                    echo "Response from script: ${response}"
-                }
-            }
-        }
-
         stage('Run Stress Test Script') {
             steps {
-                echo "Running the selected stress test..."
-                // If you need to run a specific stress test, you can handle that in main.py as necessary
+                script {
+                    // Call main.py with the selected parameter
+                    sh "python3 main.py <<EOF\n${params.STRESS_TEST}\nEOF"
+                }
             }
         }
     }
