@@ -13,12 +13,13 @@ pipeline {
         }
         stage('Run Stress Test Script') {
             steps {
-                // Use here-documents to simulate user input
-                sh '''
-                (
-                    echo "${STRESS_TEST_CHOICE}"
-                ) | python3 main.py
-                '''
+                sh """
+                #!/bin/bash
+                {
+                    echo "${STRESS_TEST_CHOICE}" 
+                    echo "6"
+                } | python3 main.py
+                """
             }
         }
     }
