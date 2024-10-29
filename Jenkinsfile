@@ -8,27 +8,27 @@ pipeline {
             }
         }
 
+        stage('Select Stress Test') {
+            steps {
+                script {
+                    // Prompt the user to select a stress test to run
+                    def choice = input(
+                        id: 'userInput', message: 'Select the stress test to run',
+                        parameters: [
+                            choice(name: 'StressTestChoice', choices: ['Test A', 'Test B', 'Test C'], description: 'Choose a stress test to run')
+                        ]
+                    )
+                    // Store the choice in an environment variable for later use
+                    env.STRESS_TEST_CHOICE = choice
+                }
+            }
+        }
+
         stage('Run Stress Test Script') {
             steps {
                 script {
-                    def choice = -1
-                    while (choice != 6) {
-                        def process = sh(script: "python3 main.py", returnStdout: true, returnStatus: true)
-                        echo process.stdout
-                        if (process.returnStatus != 0) {
-                            error("Script execution failed with exit code: ${process.returnStatus}")
-                        }
-                        choice = input(
-                            id: 'userInput', message: 'Select an option for stress testing:',
-                            parameters: [
-                                choice(
-                                    name: 'Choice',
-                                    choices: ['1', '2', '3', '4', '5', '6'],
-                                    description: 'Choose an option: 1. Memory, 2. Disk, 3. Network, 4. CPU, 5. MySQL, 6. Exit'
-                                )
-                            ]
-                        )
-                    }
+                    // Use the user-selected stress test choice as an argument to the script
+                    sh "python3 main.py ${env.STRESS_TEST_CHOICE}"
                 }
             }
         }
@@ -36,9 +36,8 @@ pipeline {
 
     post {
         always {
-            // Clean up
-            echo "Cleaning up..."
-            sh 'rm -f input.txt' 
+            echo 'Cleaning up...'
+            // Cleanup actions if necessary
         }
     }
 }
