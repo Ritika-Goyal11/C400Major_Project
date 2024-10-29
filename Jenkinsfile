@@ -17,6 +17,7 @@ pipeline {
                 #!/bin/bash
                 {
                     echo "${STRESS_TEST_CHOICE}" 
+                    echo "6"
                 } | python3 main.py
                 """
             }
