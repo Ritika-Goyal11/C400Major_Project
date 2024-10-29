@@ -1,37 +1,38 @@
 pipeline {
-    agent any
-
-    parameters {
-        choice(name: 'STRESS_TEST_CHOICE', choices: ['1', '2', '3', '4', '5', '6'], description: 'Select the type of stress test to run:')
-    }
-
+    agent any 
     stages {
-        stage('Clone Repository') {
+        stage('Checkout SCM') {
             steps {
-                
-                git url: 'https://github.com/Ritika-Goyal11/C400Major_Project.git', branch: 'main'
+                checkout scm
             }
         }
-        stage('Run Stress Test Script') {
+        stage('Get Stress Test Options') {
             steps {
-               
-                sh """
-                #!/bin/bash
-                {
-                    echo "${STRESS_TEST_CHOICE}"  
-                    echo "6"  
-                } | python3 main.py
-                """
+                script {
+                    // Fetch the list of stress tests from the Python script
+                    def testOptions = sh(script: "python3 -c 'import main; print(main.get_stress_tests())'", returnStdout: true).trim().split('\n')
+
+                    // User input for selecting the stress test
+                    def userInput = input(
+                        id: 'userInput', 
+                        message: 'Select a stress test to run:', 
+                        parameters: [
+                            [$class: 'ChoiceParameterDefinition', 
+                             name: 'STRESS_TEST', 
+                             choices: testOptions,
+                             description: 'Choose the stress test to run']
+                        ]
+                    )
+
+                    // Pass the selected test to your Python script
+                    sh "python3 main.py ${userInput}"
+                }
             }
         }
     }
-
     post {
-        success {
-            echo 'Stress test executed successfully!'
-        }
-        failure {
-            echo 'Stress test execution failed.'
+        always {
+            cleanWs() // Clean up the workspace
         }
     }
 }
