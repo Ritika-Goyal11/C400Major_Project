@@ -1,43 +1,37 @@
 pipeline {
     agent any
 
+    parameters {
+        choice(name: 'STRESS_TEST_CHOICE', choices: ['1', '2', '3', '4', '5', '6'], description: 'Select the type of stress test to run:')
+    }
+
     stages {
-        stage('Checkout SCM') {
+        stage('Clone Repository') {
             steps {
-                checkout scm
+                
+                git url: 'https://github.com/Ritika-Goyal11/C400Major_Project.git', branch: 'main'
             }
         }
-
-        stage('Select Stress Test') {
-            steps {
-                script {
-                    // Prompt the user to select a stress test to run
-                    def choice = input(
-                        id: 'userInput', message: 'Select the stress test to run',
-                        parameters: [
-                            choice(name: 'StressTestChoice', choices: ['Test A', 'Test B', 'Test C'], description: 'Choose a stress test to run')
-                        ]
-                    )
-                    // Store the choice in an environment variable for later use
-                    env.STRESS_TEST_CHOICE = choice
-                }
-            }
-        }
-
         stage('Run Stress Test Script') {
             steps {
-                script {
-                    // Use the user-selected stress test choice as an argument to the script
-                    sh "python3 main.py ${env.STRESS_TEST_CHOICE}"
-                }
+               
+                sh """
+                #!/bin/bash
+                {
+                    echo "${STRESS_TEST_CHOICE}"  
+                    echo "6"  
+                } | python3 main.py
+                """
             }
         }
     }
 
     post {
-        always {
-            echo 'Cleaning up...'
-            // Cleanup actions if necessary
+        success {
+            echo 'Stress test executed successfully!'
+        }
+        failure {
+            echo 'Stress test execution failed.'
         }
     }
 }
