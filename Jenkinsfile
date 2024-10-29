@@ -10,17 +10,18 @@ pipeline {
 
         stage('Run Stress Test Script') {
             steps {
+                // Directly feed input through a here-document
                 script {
-                    def choice = '1\n'
-                    def input = "${choice}"
-                    writeFile file: 'input.txt', text: input
-                    sh "python3 main.py < input.txt"
+                    sh '''
+                    echo -e "1\n" | python3 main.py
+                    '''
                 }
             }
         }
     }
     post {
         always {
+            // Clean up any temporary files if necessary
             sh 'rm -f input.txt'
         }
     }
