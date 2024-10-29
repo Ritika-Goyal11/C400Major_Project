@@ -2,27 +2,34 @@ pipeline {
     agent any
 
     parameters {
-        choice(name: 'STRESS_TEST', choices: ['1', '2', '3', '4', '5', '6'], description: 'Select the type of stress test to run:\n1. Memory\n2. Disk\n3. Network\n4. CPU\n5. MySQL\n6. Exit')
+        choice(name: 'STRESS_TEST_CHOICE', choices: ['1', '2', '3', '4', '5', '6'], description: 'Select the type of stress test to run:')
     }
 
     stages {
-        stage('Checkout SCM') {
+        stage('Clone Repository') {
             steps {
-                checkout scm
+                git url: 'https://github.com/Ritika-Goyal11/C400Major_Project.git', branch: 'main'
             }
         }
         stage('Run Stress Test Script') {
             steps {
-                script {
-                    // Pass the user choice as an argument to the script
-                    sh "python3 main.py"
-                }
+                sh """
+                #!/bin/bash
+                {
+                    echo "${STRESS_TEST_CHOICE}" 
+                    echo "6"
+                } | python3 main.py
+                """
             }
         }
     }
+
     post {
-        always {
-            cleanWs()
+        success {
+            echo 'Stress test executed successfully!'
+        }
+        failure {
+            echo 'Stress test execution failed.'
         }
     }
 }
