@@ -13,13 +13,12 @@ pipeline {
         }
         stage('Run Stress Test Script') {
             steps {
-                sh """
-                #!/bin/bash
-                {
-                    echo "${STRESS_TEST_CHOICE}" 
-                    echo "6"
-                } | python3 main.py
-                """
+                script {
+                    // Pass the user selection as input to the main.py script
+                    sh """
+                    echo "${STRESS_TEST_CHOICE}" | python3 main.py
+                    """
+                }
             }
         }
     }
