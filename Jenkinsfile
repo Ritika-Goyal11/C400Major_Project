@@ -1,18 +1,22 @@
 pipeline {
     agent any
 
+    parameters {
+        choice(name: 'STRESS_TEST_CHOICE', choices: ['1', '2', '3', '4', '5', '6'], description: 'Select the type of stress test to run:')
+    }
+
     stages {
         stage('Clone Repository') {
             steps {
-                git url: 'https://github.com/Ritika-Goyal11/C400Major_Project.git', branch: 'main' 
+                git url: 'https://github.com/Ritika-Goyal11/C400Major_Project.git', branch: 'main'
             }
         }
         stage('Run Stress Test Script') {
             steps {
+                // Use here-documents to simulate user input
                 sh '''
                 (
-                    echo "1"  # Simulate pressing '1' for Memory Stress Testing
-                    echo "6"  # Simulate pressing '6' to exit afterward
+                    echo "${STRESS_TEST_CHOICE}"
                 ) | python3 main.py
                 '''
             }
