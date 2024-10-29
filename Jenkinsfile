@@ -1,5 +1,6 @@
 pipeline {
     agent any 
+
     stages {
         stage('Checkout SCM') {
             steps {
@@ -9,30 +10,49 @@ pipeline {
         stage('Get Stress Test Options') {
             steps {
                 script {
-                    // Fetch the list of stress tests from the Python script
-                    def testOptions = sh(script: "python3 -c 'import main; print(main.get_stress_tests())'", returnStdout: true).trim().split('\n')
-
-                    // User input for selecting the stress test
-                    def userInput = input(
+                    // Get the available stress tests from the Python script
+                    def stressTestOptions = sh(script: 'python3 -c "import main; print(main.get_stress_tests())"', returnStdout: true).trim().tokenize(',')
+                    // Convert options to a format suitable for user input
+                    def choices = stressTestOptions.collect { it.trim() }
+                    env.STRESS_TEST_CHOICES = choices.join(',')
+                }
+            }
+        }
+        stage('Select Stress Test') {
+            steps {
+                script {
+                    // Prompt user to select a stress test
+                    def userChoice = input(
                         id: 'userInput', 
-                        message: 'Select a stress test to run:', 
+                        message: 'Please select a stress test to run:', 
                         parameters: [
-                            [$class: 'ChoiceParameterDefinition', 
-                             name: 'STRESS_TEST', 
-                             choices: testOptions,
-                             description: 'Choose the stress test to run']
+                            [$class: 'ChoiceParameterDefinition', name: 'STRESS_TEST_CHOICE', choices: env.STRESS_TEST_CHOICES, description: 'Select a stress test from the options.']
                         ]
                     )
-
-                    // Pass the selected test to your Python script
-                    sh "python3 main.py ${userInput}"
+                    // Set the chosen stress test to an environment variable
+                    env.STRESS_TEST_CHOICE = userChoice
+                }
+            }
+        }
+        stage('Run Stress Test Script') {
+            steps {
+                script {
+                    // Execute the selected stress test using the Python script
+                    sh "python3 main.py --test ${env.STRESS_TEST_CHOICE}"
                 }
             }
         }
     }
+
     post {
         always {
-            cleanWs() // Clean up the workspace
+            cleanWs() // Cleanup workspace after build
+        }
+        success {
+            echo 'Stress test executed successfully.'
+        }
+        failure {
+            echo 'Stress test execution failed.'
         }
     }
 }
