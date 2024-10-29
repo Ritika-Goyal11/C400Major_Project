@@ -1,31 +1,30 @@
 pipeline {
     agent any
 
-    environment {
-        REPO_URL = 'https://github.com/Ritika-Goyal11/C400Major_Project.git'
-        SCRIPT_PATH = 'main.py'
-    }
-
     stages {
         stage('Clone Repository') {
             steps {
-                git branch: 'main', url: "${REPO_URL}"
+                git url: 'https://github.com/Ritika-Goyal11/C400Major_Project.git', branch: 'main' 
             }
         }
-
         stage('Run Stress Test Script') {
             steps {
-                sh "python3 ${SCRIPT_PATH}"
+                sh '''
+                (
+                    echo "1"  # Simulate pressing '1' for Memory Stress Testing
+                    echo "6"  # Simulate pressing '6' to exit afterward
+                ) | python3 main.py
+                '''
             }
         }
     }
 
     post {
         success {
-            echo 'Script executed successfully!'
+            echo 'Stress test executed successfully!'
         }
         failure {
-            echo 'Script execution failed!'
+            echo 'Stress test execution failed.'
         }
     }
 }
