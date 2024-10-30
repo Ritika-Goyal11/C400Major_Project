@@ -4,7 +4,7 @@ pipeline {
     environment {
         VM_USER = 'root'
         VM_IP = '192.168.1.119'
-        CREDENTIALS_ID = 'your_ssh_credentials_id'
+        CREDENTIALS_ID = '2df49f3f-d68d-41b5-808c-b7f2c6f22434'
     }
 
     stages {
@@ -15,7 +15,7 @@ pipeline {
         }
         stage('Copy Repository to VM') {
             steps {
-                sshagent(['your_ssh_credentials_id']) {
+                sshagent(['2df49f3f-d68d-41b5-808c-b7f2c6f22434']) {
                     sh """
                     scp -r ${WORKSPACE} ${VM_USER}@${VM_IP}:/root
                     """
