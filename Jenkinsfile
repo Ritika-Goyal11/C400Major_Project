@@ -2,21 +2,22 @@ pipeline {
     agent any
 
     environment {
-        TARGET_VM = '192.168.1.119' 
-        TARGET_USER = 'root'          
-        TARGET_DIRECTORY = '/root' 
-        GIT_REPO = 'https://github.com/Ritika-Goyal11/C400Major_Project.git'
+        VM_USER = 'root'
+        VM_IP = '192.168.1.119'
+        CREDENTIALS_ID = 'your_ssh_credentials_id'
     }
 
     stages {
-        stage('Git Pull on Target VM') {
+        stage('Clone Repository') {
             steps {
-                script {
+                git url: 'https://github.com/Ritika-Goyal11/C400Major_Project.git', branch: 'main'
+            }
+        }
+        stage('Copy Repository to VM') {
+            steps {
+                sshagent(['your_ssh_credentials_id']) {
                     sh """
-                    ssh -o StrictHostKeyChecking=no ${TARGET_USER}@${TARGET_VM} << EOF
-                        cd ${TARGET_DIRECTORY}
-                        git pull ${GIT_REPO} main
-                    EOF
+                    scp -r ${WORKSPACE} ${VM_USER}@${VM_IP}:/root
                     """
                 }
             }
@@ -25,10 +26,10 @@ pipeline {
 
     post {
         success {
-            echo 'Script downloaded successfully on target VM!'
+            echo 'Repository successfully updated on the VM!'
         }
         failure {
-            echo 'Script download failed on target VM.'
+            echo 'Failed to update the repository on the VM.'
         }
     }
 }
