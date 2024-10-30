@@ -1,35 +1,41 @@
 pipeline {
     agent any
-
     environment {
-        VM_USER = 'root'
-        VM_IP = '192.168.1.119'
-        CREDENTIALS_ID = '2df49f3f-d68d-41b5-808c-b7f2c6f22434'
+        GIT_REPO = 'https://github.com/Ritika-Goyal11/C400Major_Project.git'
+        SSH_CREDENTIALS_ID = '2df49f3f-d68d-41b5-808c-b7f2c6f22434'
+        VM_PATH = '/root' 
     }
 
     stages {
-        stage('Clone Repository') {
+        stage('Checkout Source Code') {
             steps {
-                git url: 'https://github.com/Ritika-Goyal11/C400Major_Project.git', branch: 'main'
+                git branch: 'main', url: GIT_REPO
             }
         }
+
         stage('Copy Repository to VM') {
             steps {
-                sshagent(['2df49f3f-d68d-41b5-808c-b7f2c6f22434']) {
+                sshagent([SSH_CREDENTIALS_ID]) {
                     sh """
-                    scp -r ${WORKSPACE} ${VM_USER}@${VM_IP}:/root
-                    """
+                        scp -r ./* root@192.168.1.119:${VM_TARGET_PATH}
+                    """ 
                 }
+            }
+        }
+
+        stage('Post Actions') {
+            steps {
+                echo 'Repository has been copied to the VM.'
             }
         }
     }
 
     post {
         success {
-            echo 'Repository successfully updated on the VM!'
+            echo 'Pipeline executed successfully!'
         }
         failure {
-            echo 'Failed to update the repository on the VM.'
+            echo 'Pipeline execution failed.'
         }
     }
 }
