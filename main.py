@@ -3,9 +3,7 @@ import subprocess
 import time
 import logging
 import psutil
-from dotenv import load_dotenv
-from twilio.rest import Client
-import google.generativeai as genai
+import argparse
 
 # Logging configuration
 logging.basicConfig(
@@ -14,34 +12,6 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S"
 )
-
-load_dotenv()
-
-API_KEY = os.getenv("API_KEY")
-genai.configure(api_key=API_KEY)
-
-def fetch_logs():
-    with open('stress_test.log', 'r') as file:
-        lines = file.readlines()[-40:]
-    return ''.join(lines)
-
-def send_logs_to_api(logs):
-    model = genai.GenerativeModel("gemini-1.5-flash")
-    response = model.generate_content(f"You are an SRE. You have to suggest troubleshooting steps based on the given logs in 200 words.\n{logs}")
-    print(response.text)
-    return response.text
-
-def send_whatsapp_message(message_body):
-    account_sid = os.environ["ACC_SID"]
-    auth_token = os.environ["AUTH_TOKEN"]
-    client = Client(account_sid, auth_token)
-    sent_message = client.messages.create(
-        body=message_body,
-        from_=os.environ["from_whatsapp_number"],
-        to=os.environ["to_whatsapp_number"]
-    )
-    print("WhatsApp message sent with SID:", sent_message.sid)
-    return sent_message.sid
 
 def memory_stress_test():
     logging.info("Starting Memory Stress Test...")
@@ -75,7 +45,7 @@ def disk_stress_test():
     print("Starting Disk Stress Test...")
     try:
         stress_process = subprocess.Popen(
-            ["stress-ng", "--iomix", "4", "--iomix-bytes", "90%", "--timeout", "30"],
+            ["stress-ng", "--iomix", "4", "--iomix-byes", "90%", "--timeout", "30"],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE
         )
@@ -189,38 +159,32 @@ def mysql_stress_test():
     logging.info("MySQL Stress Test Completed.")
 
 def main():
-    while True:
-        print("\nSelect an option for stress testing:")
-        print("1. Memory Stress Testing")
-        print("2. Disk Stress Testing")
-        print("3. Network Stress Testing")
-        print("4. CPU Stress Testing")
-        print("5. MySQL Stress Testing")
-        print("6. Exit")
+    parser = argparse.ArgumentParser(description="Stress Testing Options")
+    parser.add_argument(
+        '--test', 
+        choices=['memory', 'disk', 'network', 'cpu', 'mysql', 'all'], 
+        help="Specify the type of stress test to run."
+    )
+    args = parser.parse_args()
 
-        choice = input("Enter your choice: ")
-
-        if choice == "1":
-            memory_stress_test()
-        elif choice == "2":
-            disk_stress_test()
-        elif choice == "3":
-            network_stress_test()
-        elif choice == "4":
-            cpu_stress_test()
-        elif choice == "5":
-            mysql_stress_test()
-        elif choice == "6":
-            print("Exiting...")
-            break
-        else:
-            print("Invalid choice. Please try again.")
-
-        logs = fetch_logs()
-        analysis_result = send_logs_to_api(logs)
-        #print(analysis_result)
-        if analysis_result:
-            send_whatsapp_message(analysis_result)
+    if args.test == "memory":
+        memory_stress_test()
+    elif args.test == "disk":
+        disk_stress_test()
+    elif args.test == "network":
+        network_stress_test()
+    elif args.test == "cpu":
+        cpu_stress_test()
+    elif args.test == "mysql":
+        mysql_stress_test()
+    elif args.test == "all":
+        memory_stress_test()
+        disk_stress_test()
+        mysql_stress_test()
+        cpu_stress_test()
+        network_stress_test()
+    else:
+        print("No valid test specified or no argument provided. Exiting.")
 
 if __name__ == "__main__":
     main()
