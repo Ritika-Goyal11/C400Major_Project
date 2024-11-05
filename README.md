@@ -91,6 +91,8 @@ Run the provided Ansible playbooks to automate installation and configuration:
    ```bash
    kubectl apply -f deployment.yml
    ```
+3. **Docker Image**: docker pull ritikagoyal11/stresstest
+Docker Image![image](https://github.com/user-attachments/assets/0cc637a4-ba58-4801-a83d-832adb5c06ff)
 
 
 ### Alerts and Notifications
